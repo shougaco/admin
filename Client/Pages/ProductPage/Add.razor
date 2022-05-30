@@ -45,12 +45,21 @@
 
             <MudTextField Label="Tags" HelperText="Use , to create multiple tags" Immediate="true" @bind-Value="Tags" For="@(() => Tags)" />
 
-            <MudChipSet AllClosable="true" OnClose="Closed">
-                @foreach (var value in values)
+            <MudChipSet Class="mb-3" AllClosable="true" OnClose="Closed">
+                @foreach (var value in tagValues)
                 {
                     <MudChip Class="rounded" Text="@value"></MudChip>
                 }
             </MudChipSet>
+
+            @if(Collections is not null) {
+            <MudSelect Class="mt-4" MultiSelectionTextFunc="@(new Func<List<string>, string>(GetMultiSelectionText))" T="string" Label="Collections" MultiSelection="true" @bind-Value="value" @bind-SelectedValues='options'>
+                @foreach (var item in Collections)
+                {
+                    <MudSelectItem T="string" Value="@item.Name" />
+                }
+            </MudSelect>
+        }
             
 
         </MudPaper>
@@ -73,7 +82,7 @@
 
     public string Tags { get; set; }
     List<string> values => !String.IsNullOrEmpty(Tags) ? Tags.Replace(" ", "").Split(',').ToList() : new List<string>();
-    @* public void Closed(MudChip chip) => values.Remove(chip.Text); *@
+    List<string> tagValues => !String.IsNullOrEmpty(Tags) ? Tags.Replace(" ", "").Split(',').ToList() : new List<string>();
     public void Closed(MudChip chip) => removeTags(chip);
 
     private void removeTags(MudChip chip) {
@@ -103,7 +112,7 @@
 
             var product = response.Content.ReadFromJsonAsync<Product>().Result;
             
-            await CreateProductTags(values, product);
+            await CreateProductTags(tagValues, product);
 
             Snackbar.Add($"All tags are added to the product", Severity.Success);
 
@@ -129,7 +138,10 @@
                 ProductId = product.Id
             };
             
-            await _client.PostAsJsonAsync("/api/Tag", newTag);
+            await _client.PostAsJsonAsync("/api/ProductTag", newTag);
+
+        }
+    }
 
         }
     }
