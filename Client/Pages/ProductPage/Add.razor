@@ -75,15 +75,29 @@
 
 @code {
     bool success;
+    private string value { get; set; } = "Nothing selected";
+    private IEnumerable<string> options { get; set; } = new HashSet<string>();
 
     private Product Product = new Product();
 
     private ProductStatus ProductStatus = new ProductStatus();
+    private ProductCollection ProductCollection = new ProductCollection();
+    private List<Collection> SelectedCollections { get; set; }
 
     public string Tags { get; set; }
-    List<string> values => !String.IsNullOrEmpty(Tags) ? Tags.Replace(" ", "").Split(',').ToList() : new List<string>();
+    public List<Collection> Collections { get; set; }
     List<string> tagValues => !String.IsNullOrEmpty(Tags) ? Tags.Replace(" ", "").Split(',').ToList() : new List<string>();
     public void Closed(MudChip chip) => removeTags(chip);
+
+    protected override async Task OnInitializedAsync() {
+        Collections = await _client.GetFromJsonAsync<List<Collection>>($"api/collection?companyId={_stateContainer.Company.Id}");   
+    }
+
+    private string GetMultiSelectionText(List<string> selectedValues)
+    {
+        SelectedCollections = Collections.Where(x => selectedValues.Contains(x.Name)).ToList();
+        return $"{string.Join(", ", selectedValues.Select(x => x.ToString()))}";
+    }
 
     private void removeTags(MudChip chip) {
         var tags = Tags.Replace(" ", "").Split(',');
@@ -116,6 +130,10 @@
 
             Snackbar.Add($"All tags are added to the product", Severity.Success);
 
+            await CreateProductCollections(SelectedCollections, product.Id);
+
+            Snackbar.Add($"All collections are added to the product", Severity.Success);
+
 
             _navigationManager.NavigateTo($"/products");
         }
@@ -130,7 +148,6 @@
 
 
     private async Task CreateProductTags(List<string> tags, Product product) {
-        var httpResponse = new HttpResponseMessage();
         foreach(var tag in tags) {
 
             var newTag = new ProductTag {
@@ -142,6 +159,17 @@
 
         }
     }
+
+
+    private async Task CreateProductCollections(List<Collection> collections, string productId) {
+        foreach(var collection in collections) {
+
+            var productCollection = new ProductCollection {
+                ProductId = productId,
+                CollectionId = collection.Id
+            };
+            
+            await _client.PostAsJsonAsync("/api/ProductCollection", productCollection);
 
         }
     }

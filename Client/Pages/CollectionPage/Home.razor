@@ -1,0 +1,109 @@
+@page "/collections"
+
+
+
+
+<AuthorizeView>
+    <Authorized>
+        <div class="d-flex justify-content-between py-2 mb-2">
+            <Navigation />
+            <MudFab Variant="Variant.Outlined" DisableElevation="true" Color="Color.Default" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" Class="me-2" OnClick='@(() => Navigate("Collections/add"))' />
+        </div>
+        <MudTable   Items="@Elements" MultiSelection="true" 
+                    Dense="true" Hover="true" HorizontalScrollbar="true"
+                    FixedHeader="@fixed_header" FixedFooter="@fixed_footer" Height="@(fixed_header || fixed_footer ?"650px":"")"
+                    Loading="@_loading" LoadingProgressColor="Color.Info"
+                    Filter="new Func<Collection,bool>(FilterFunc1)" @bind-SelectedItems="selectedItems1"
+                    RowsPerPage=100
+                    Class="mb-3">
+            <ToolBarContent>
+
+                <MudText Typo="Typo.h6">Collections</MudText>
+                <MudSpacer />
+                <MudTextField @bind-Value="searchString1" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Name</MudTh>
+                <MudTh>Description</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate Context="model">
+                <MudTd DataLabel="Name" Class='@(selectedItems1.Select(s => s.Id).Contains(model.Id) == true ? "fw-bold" : "")'>@model.Name</MudTd>
+                <MudTd DataLabel="Description" Class='@(selectedItems1.Select(s => s.Id).Contains(model.Id) == true ? "fw-bold" : "")'>@model.Description</MudTd>
+                <MudTd>
+                    <MudLink Href='@($"Collections/catalog/{model.Name}")'><i class="bi bi-arrow-up-right-square"></i></MudLink>
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+        </MudTable>
+
+        <MudText Inline="true">Selected items: @(selectedItems1==null ? "" : string.Join(", ", selectedItems1.OrderBy(x=>x.Name).Select(x=>x.Name)))</MudText>
+    </Authorized>
+    <NotAuthorized>
+        <MudAlert Severity="Severity.Warning">You are not authorized to view this page</MudAlert>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+    [Parameter] public bool isSuccess { get; set; }
+    private string Slug => _stateContainer.Company is null ? "" : _stateContainer.Company.Slug;
+
+    bool fixed_header = true;
+    bool fixed_footer = true;
+    private bool _loading = false;
+    private string searchString1 = "";
+    private HashSet<Collection> selectedItems1 = new HashSet<Collection>();
+    private HashSet<Collection> selectedItems = new HashSet<Collection>();
+
+    private IEnumerable<Collection> Elements = new List<Collection>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+
+        if(!String.IsNullOrEmpty(_stateContainer.Company.Id)) {
+            await SetCollectionsAsync();
+        }
+        
+        _loading = false;
+
+        _stateContainer.OnChange += async () =>
+        {
+            await SetCollectionsAsync();
+            await InvokeAsync(StateHasChanged);
+        };
+    }
+
+    private async Task SetCollectionsAsync() {
+        try
+        {
+            Elements = await _client.GetFromJsonAsync<List<Collection>>($"api/collection?companyId={_stateContainer.Company.Id}");   
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+    private bool FilterFunc1(Collection element) => FilterFunc(element, searchString1);
+
+    private bool FilterFunc(Collection element, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.Description.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    private void Navigate(string url)
+    {
+        _navigationManager.NavigateTo(url);
+    }
+}
+

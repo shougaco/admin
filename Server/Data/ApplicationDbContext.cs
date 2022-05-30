@@ -64,7 +64,9 @@ public class ApplicationDbContext : ApiAuthorizationDbContext<ApplicationUser>
     public DbSet<Store> Store { get; set; }
     public DbSet<TransLog> TransLog { get; set; }
     public DbSet<Barcode> Barcode { get; set; }
+    public DbSet<Collection> Collection { get; set; }
     public DbSet<Product> Product { get; set; }
+    public DbSet<ProductCollection> ProductCollection { get; set; }
     public DbSet<ProductTag> ProductTag { get; set; }
     public DbSet<ProductVariant> ProductVariant { get; set; }
     public DbSet<VariantOption> VariantOption { get; set; }

@@ -16,8 +16,8 @@ public class Product : Detail
 
     public ProductStatus Status { get; set; }
 
-
-    public ICollection<ProductTag>? ProductTags { get; set; }
+    public string? CollectionId { get; set; }
+    public Collection? Collection { get; set; }
 
 
 }
