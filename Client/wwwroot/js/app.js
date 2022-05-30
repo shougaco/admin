@@ -3,7 +3,8 @@
 
 document.addEventListener('keydown', function(event){
 
-    if(event.keyCode == 191){
+    // check if the user pressed / and the target is not an input field
+    if(event.keyCode == 191 && event.target.tagName.toLowerCase() != 'input'){
         const myModal = new bootstrap.Modal(document.getElementById("searchModal"), {});
         const myInput = document.getElementById('searchInput')
         const myModal2 = document.getElementById('searchModal');
