@@ -1,0 +1,112 @@
+@page "/team"
+
+
+<div class="d-flex justify-content-between py-2 mb-2">
+    <Navigation />
+    <MudFab Variant="Variant.Outlined" DisableElevation="true" Color="Color.Default" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" Class="me-2" OnClick='@(() => Navigate("team/add"))' />
+</div>
+
+
+
+<MudTable   Items="@Elements" MultiSelection="true" 
+            Dense="true" Hover="true" HorizontalScrollbar="true"
+            FixedHeader="@fixed_header" FixedFooter="@fixed_footer" Height="@(fixed_header || fixed_footer ?"650px":"")"
+            Loading="@_loading" LoadingProgressColor="Color.Info"
+            Filter="new Func<Member,bool>(FilterFunc1)" @bind-SelectedItems="selectedItems1"
+            RowsPerPage=100
+            Class="mb-3">
+    <ToolBarContent>
+        
+        <MudText Typo="Typo.h6">Members</MudText>
+        <MudSpacer />
+        <MudTextField @bind-Value="searchString1" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Username</MudTh>
+        <MudTh>Email</MudTh>
+        <MudTh></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Code" Class='@(selectedItems1.Select(s => s.Id).Contains(context.Id) == true ? "fw-bold" : "")'>@context.ApplicationUser.UserName</MudTd>
+        <MudTd DataLabel="PurchaseUOM" Class='@(selectedItems1.Select(s => s.Id).Contains(context.Id) == true ? "fw-bold" : "")'>@context.ApplicationUser.Email</MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+
+<MudText Inline="true">Selected items: @(selectedItems1==null ? "" : string.Join(", ", selectedItems1.OrderBy(x=>x.ApplicationUser.UserName).Select(x=>x.ApplicationUser.UserName)))</MudText>
+
+
+
+
+
+
+@code {
+
+    bool fixed_header = true;
+    bool fixed_footer = true;
+    private bool _loading = false;
+    private string searchString1 = "";
+    private HashSet<Member> selectedItems1 = new HashSet<Member>();
+    private HashSet<Member> selectedItems = new HashSet<Member>();
+
+    private IEnumerable<Member> Elements = new List<Member>();
+
+    public string CompanyId => !String.IsNullOrEmpty(_stateContainer.Company.Id) ? _stateContainer.Company.Id : "";
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+
+        if(!String.IsNullOrEmpty(CompanyId)) {
+            await SetMembersAsync();
+        }
+        
+        
+        _loading = false;
+
+        _stateContainer.OnChange += async () =>
+        {
+            await SetMembersAsync();
+            await InvokeAsync(StateHasChanged);
+        };
+    
+    }
+
+    private async Task SetMembersAsync() {
+        try
+        {
+            Elements = await _client.GetFromJsonAsync<List<Member>>($"api/member/filter?companyId={CompanyId}");   
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+
+    
+
+    private bool FilterFunc1(Member element) => FilterFunc(element, searchString1);
+
+    private bool FilterFunc(Member element, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.Id.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.ApplicationUser.UserName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.ApplicationUser.Email.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    private void Navigate(string url)
+    {
+        _navigationManager.NavigateTo(url);
+    }
+}
+

@@ -1,0 +1,118 @@
+@page "/suppliers"
+
+
+
+<div class="d-flex justify-content-between py-2 mb-2">
+    <Navigation />
+    <MudFab Variant="Variant.Outlined" DisableElevation="true" Color="Color.Default" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" Class="me-2" OnClick='@(() => Navigate("suppliers/add"))' />
+</div>
+
+
+
+<MudTable   Items="@Elements" MultiSelection="true" 
+            Dense="true" Hover="true" HorizontalScrollbar="true"
+            FixedHeader="@fixed_header" FixedFooter="@fixed_footer" Height="@(fixed_header || fixed_footer ?"650px":"")"
+            Loading="@_loading" LoadingProgressColor="Color.Info"
+            Filter="new Func<Supplier,bool>(FilterFunc1)" @bind-SelectedItems="selectedItems1"
+            RowsPerPage=100
+            Class="mb-3">
+    <ToolBarContent>
+        
+        <MudText Typo="Typo.h6">Suppliers</MudText>
+        <MudSpacer />
+        <MudTextField @bind-Value="searchString1" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Code</MudTh>
+        <MudTh>Name</MudTh>
+        <MudTh></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Code" Class='@(selectedItems1.Select(s => s.Id).Contains(context.Id) == true ? "fw-bold" : "")'>@context.Code</MudTd>
+        <MudTd DataLabel="Supplier" Class='@(selectedItems1.Select(s => s.Id).Contains(context.Id) == true ? "fw-bold" : "")'>@context.Name</MudTd>
+        <MudTd>
+            <MudLink Href='@($"suppliers/catalog/{context.Code}")'><i class="bi bi-arrow-up-right-square"></i></MudLink>
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+
+<MudText Inline="true">Selected items: @(selectedItems1==null ? "" : string.Join(", ", selectedItems1.OrderBy(x=>x.Code).Select(x=>x.Code)))</MudText>
+
+
+
+
+
+
+@code {
+    [Parameter] public bool isSuccess { get; set; }
+
+    bool fixed_header = true;
+    bool fixed_footer = true;
+    private bool _loading = false;
+    private string searchString1 = "";
+    private HashSet<Supplier> selectedItems1 = new HashSet<Supplier>();
+    private HashSet<Supplier> selectedItems = new HashSet<Supplier>();
+
+    private IEnumerable<Supplier> Elements = new List<Supplier>();
+
+    public string CompanyId => !String.IsNullOrEmpty(_stateContainer.Company.Id) ? _stateContainer.Company.Id : "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        
+        if(!String.IsNullOrEmpty(CompanyId))
+        {
+            await SetSuppliersAsync();
+        }
+
+        
+        _loading = false;
+
+        _stateContainer.OnChange += async () =>
+        {
+            await SetSuppliersAsync();
+            await InvokeAsync(StateHasChanged);
+        };
+    }
+
+
+    private async Task SetSuppliersAsync()
+    {
+        try
+        {
+            Elements = await _client.GetFromJsonAsync<List<Supplier>>($"api/supplier?companyId={_stateContainer.Company.Id}");   
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+
+    
+
+    private bool FilterFunc1(Supplier element) => FilterFunc(element, searchString1);
+
+    private bool FilterFunc(Supplier element, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.Id.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.Code.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    private void Navigate(string url)
+    {
+        _navigationManager.NavigateTo(url);
+    }
+}
+

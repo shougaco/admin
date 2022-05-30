@@ -1,0 +1,136 @@
+@page "/products/add"
+
+
+<MudContainer MaxWidth="MaxWidth.Large">
+
+    
+<MudGrid>
+    <MudItem xs="12" lg="12">
+        <Navigation />
+        <MudPaper Elevation="25" >
+            <MudToolBar>
+                <MudIconButton Icon="@Icons.Material.Outlined.ArrowBack" Color="Color.Inherit" Class="mr-1" />
+                <MudText Class="py-1 text-nowrap" Typo="Typo.body1">Add a new Product</MudText>
+                <MudSpacer />
+                <MudIconButton Icon="@Icons.Material.Outlined.MoreVert" Color="Color.Inherit" />
+            </MudToolBar>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" lg="8">
+        <MudPaper Elevation="25" Class="p-4">
+            <MudText Class="pb-3 text-nowrap fw-bold" Typo="Typo.body1">Product details</MudText>
+                <EditForm Model="@Product" OnValidSubmit="OnValidSubmit">
+                    <DataAnnotationsValidator/>
+
+                    <MudTextField Label="Code" HelperText="Max. 10 characters" @bind-Value="Product.Code" For="@(() => Product.Code)" />
+                    <MudTextField Label="Brand" HelperText="Max. 10 characters" @bind-Value="Product.Brand" For="@(() => Product.Brand)" />
+                    <MudTextField Label="Description" HelperText="Max. 10 characters" @bind-Value="Product.Description" For="@(() => Product.Description)" />
+
+                    <MudCardActions>
+                        <MudButton ButtonType="ButtonType.Submit" Variant="MudBlazor.Variant.Filled" Color="Color.Primary" Class="ml-auto">Register</MudButton>
+                    </MudCardActions>
+                </EditForm>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" lg="4">
+        <MudPaper Elevation="25" Class="p-4">
+            <MudText Class="pb-3 text-nowrap fw-bold" Typo="Typo.body1">Product Status</MudText>
+
+            <MudSelect Class="mb-3" T="ProductStatus" Label="Product status" Margin="Margin.Dense" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter" @bind-Value="ProductStatus">
+                <MudSelectItem T="ProductStatus" Value="@ProductStatus.Draft"/>
+                <MudSelectItem T="ProductStatus" Value="@ProductStatus.Active"/>
+            </MudSelect>
+
+            <MudTextField Label="Tags" HelperText="Use , to create multiple tags" Immediate="true" @bind-Value="Tags" For="@(() => Tags)" />
+
+            <MudChipSet AllClosable="true" OnClose="Closed">
+                @foreach (var value in values)
+                {
+                    <MudChip Class="rounded" Text="@value"></MudChip>
+                }
+            </MudChipSet>
+            
+
+        </MudPaper>
+    </MudItem>
+
+
+</MudGrid>
+
+</MudContainer>
+    
+
+
+
+@code {
+    bool success;
+
+    private Product Product = new Product();
+
+    private ProductStatus ProductStatus = new ProductStatus();
+
+    public string Tags { get; set; }
+    List<string> values => !String.IsNullOrEmpty(Tags) ? Tags.Replace(" ", "").Split(',').ToList() : new List<string>();
+    @* public void Closed(MudChip chip) => values.Remove(chip.Text); *@
+    public void Closed(MudChip chip) => removeTags(chip);
+
+    private void removeTags(MudChip chip) {
+        var tags = Tags.Replace(" ", "").Split(',');
+
+        var newTags = new List<string>();
+
+        foreach (var tag in tags) {
+            if (tag != chip.Text) {
+                newTags.Add(tag);
+            }
+        }
+        Tags = String.Join(",", newTags);
+    }
+
+
+    private async Task OnValidSubmit() 
+    {
+        Product.CompanyId = _stateContainer.Company.Id;
+        Product.Status = ProductStatus;
+        var response = await _client.PostAsJsonAsync("/api/Product", Product);
+
+        if(response.IsSuccessStatusCode)
+        {
+            success = true;
+            Snackbar.Add($"New Product is created", Severity.Success);
+
+            var product = response.Content.ReadFromJsonAsync<Product>().Result;
+            
+            await CreateProductTags(values, product);
+
+            Snackbar.Add($"All tags are added to the product", Severity.Success);
+
+
+            _navigationManager.NavigateTo($"/products");
+        }
+        else
+        {
+            success = false;
+            var error = await response.Content.ReadAsStringAsync();
+            Snackbar.Add($"{error}", Severity.Error);
+            
+        }
+    }
+
+
+    private async Task CreateProductTags(List<string> tags, Product product) {
+        var httpResponse = new HttpResponseMessage();
+        foreach(var tag in tags) {
+
+            var newTag = new ProductTag {
+                Name = tag,
+                ProductId = product.Id
+            };
+            
+            await _client.PostAsJsonAsync("/api/Tag", newTag);
+
+        }
+    }
+}

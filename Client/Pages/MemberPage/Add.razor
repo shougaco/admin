@@ -1,0 +1,61 @@
+@page "/team/add"
+@inject ISnackbar Snackbar
+@inject NavigationManager _navigationManager
+@inject IJSRuntime _jsRuntime
+
+
+
+
+<div class="container my-5 bg-white rounded rounded-5 border shadow-sm p-5">
+    <div class="d-flex justify-content-between">
+        <Navigation />
+        <MudSpacer />
+        <MudLink Class="text-nowrap" Href="team/add/new"> Create new User</MudLink>
+    </div>
+    
+
+    <MudText Class="mb-4" Typo="Typo.h6">Add a new member</MudText>
+
+    <EditForm Model="@Member" OnValidSubmit="OnValidSubmit">
+        <DataAnnotationsValidator/>
+
+        <MudTextField Label="Username" HelperText="Max. 10 characters" @bind-Value="Username" For="@(() => Username)" />
+            
+        <MudCardActions Class="mt-4">
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Register</MudButton>
+            
+        </MudCardActions>
+    </EditForm>
+
+
+</div>
+
+
+
+@code {
+    bool success;
+
+    private Member Member = new Member();
+
+    private string Username { get; set; }
+
+    private async Task OnValidSubmit() 
+    {
+        Member.CompanyId = _stateContainer.Company.Id;
+        using var response = await _client.PostAsJsonAsync($"/api/member?username={Username}", Member);
+
+        if(response.IsSuccessStatusCode)
+        {
+            success = true;
+            Snackbar.Add($"New Member is created", Severity.Success);
+            _navigationManager.NavigateTo($"/team");
+        }
+        else
+        {
+            success = false;
+            var error = await response.Content.ReadAsStringAsync();
+            Snackbar.Add($"{error}", Severity.Error);
+            
+        }
+    }
+}

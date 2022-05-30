@@ -1,0 +1,86 @@
+@page "/company/{isSuccess:bool?}"
+@attribute [Authorize]
+
+<AuthorizeView Roles='@($"{Slug}-Owner")'>
+    <Authorized>
+        <div class="container my-5 bg-white rounded rounded-5 border shadow-sm p-5">
+
+            <Navigation />
+            @if(Company is not null) {
+                <MudText Class="my-3" Align="Align.Left">
+                    <b class="me-5">Id</b> 
+                    @Company.Id
+                </MudText>
+                <MudText Class="my-3" Align="Align.Left">
+                    <b class="me-5">Name</b> 
+                    @Company.Name
+                </MudText>
+                <MudText Class="my-3" Align="Align.Left">
+                    <b class="me-5">Description</b> 
+                    @Company.Description
+                </MudText>
+            }
+            <MudText Class="my-3" Align="Align.Left">
+                <b class="me-5">Your API Key</b> 
+                @if(ApiKey is null) {
+                    <MudButton Variant="Variant.Filled" Size="Size.Small" Color="Color.Primary">Generate API Key</MudButton>
+                }
+                else {
+                    @ApiKey.Key
+                }
+
+            </MudText>
+        </div>
+    </Authorized>
+
+    <NotAuthorized>
+        <MudAlert Severity="Severity.Warning">You are not authorized to view this page</MudAlert>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+
+    public string CompanyId => !String.IsNullOrEmpty(_stateContainer.Company.Id) ? _stateContainer.Company.Id : "";
+    public string Slug => !String.IsNullOrEmpty(_stateContainer.Company.Slug) ? _stateContainer.Company.Slug : "";
+    public static Company Company = new Company();
+    public ApiKey ApiKey { get; set; }
+
+    [Parameter] public bool isSuccess { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if(isSuccess) {
+            Snackbar.Add($"{Company.Name} is now created", Severity.Success);
+            _navigationManager.NavigateTo("company");
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if(!String.IsNullOrEmpty(CompanyId)) {
+            await SetCompanyAsync();
+        }
+        
+        
+
+        _stateContainer.OnChange += async () =>
+        {
+            await SetCompanyAsync();
+            await InvokeAsync(StateHasChanged);
+        };
+    }
+
+    private async Task SetCompanyAsync()
+    {
+        try 
+        {
+            Company = await _client.GetFromJsonAsync<Company>($"api/company/{CompanyId}");
+            ApiKey = await _client.GetFromJsonAsync<ApiKey>($"api/apikey/filter?companyId={CompanyId}");     
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+}

@@ -1,0 +1,24 @@
+@page "/company/type"
+
+
+<MudContainer Class="mt-16 bg-white rounded border shadow-sm p-4">
+
+
+    <Navigation />
+
+    <MudText Class="my-5" Typo="Typo.h6">Choose company type</MudText>
+    <MudSwitch Class="my-5" @bind-Checked="isCustomer" Color="Color.Error"> I am a <strong>@(companyType.ToString().ToUpper())</strong></MudSwitch>
+    <MudSpacer />
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick='@(() => _navigationManager.NavigateTo($"company/add/{companyType}"))'>Continue</MudButton>
+
+</MudContainer>
+
+
+@code {
+    
+    public bool isCustomer { get; set; } = true;
+
+    public CompanyType companyType => isCustomer ? CompanyType.Customer : CompanyType.Supplier;
+
+
+}

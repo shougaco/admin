@@ -1,0 +1,58 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+
+@inject NavigationManager Navigation
+@inject SignOutSessionStateManager SignOutManager
+
+<AuthorizeView>
+    <Authorized>
+        <div class="dropdown">
+            <a id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+                <MudAvatar Color="Color.Primary">@context.User.Identity?.Name.ToUpper()[0]</MudAvatar>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-macos mx-0 shadow" aria-labelledby="dropdownMenuLink" style="width: 220px;">
+              <li><a class="dropdown-item" href="authentication/profile">Profile</a></li>
+              <li>
+                  <a class="dropdown-item" @onclick="ChangeIcon">
+                  
+                  <MudLink Class="me-2" Variant="Variant.Text" DisableElevation="true" Size="Size.Small">@ModeText</MudLink>
+                  <MudIcon Icon="@selectedIcon" Color="Color.Primary" />
+                  </a>
+              </li>
+              <li><a class="dropdown-item" href="#">Settings</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" @onclick="BeginSignOut">Logout</a></li>
+            </ul>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <a href="authentication/register">Register</a>
+        <a href="authentication/login">Log in</a>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code{
+
+    private string selectedIcon = Icons.Outlined.WbSunny;
+    private Color color = Color.Primary;
+    private string ModeText = "Dark mode";
+
+    private void ChangeIcon()
+    {
+        if (selectedIcon == Icons.Outlined.WbSunny)
+        {
+            selectedIcon = Icons.Outlined.Bedtime;
+            color = Color.Warning;
+            ModeText = "Light mode";
+        }
+        else
+        {
+            selectedIcon = Icons.Outlined.WbSunny;
+        }
+    }
+    private async Task BeginSignOut(MouseEventArgs args)
+    {
+        await SignOutManager.SetSignOutState();
+        Navigation.NavigateTo("authentication/logout");
+    }
+}

@@ -1,0 +1,53 @@
+@inject NavigationManager _navigationManager
+
+
+<div class="w-full flex items-center inter-small-semibold text-grey-50 mb-4">
+    @foreach(var breadcrumb in Breadcrumbs.OrderBy(b => b.Order)) {
+        Counter++;
+        <a href="@breadcrumb.Url" style="text-decoration: none; color: inherit;">
+            <span class="@breadcrumb.Style">@breadcrumb.Title</span>
+        </a>
+        
+
+        if(Counter < Breadcrumbs.Count()) {
+            <span class="mx-0.5">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            </span>
+        }
+
+    }
+</div>
+
+@code {
+    private List<Breadcrumb> Breadcrumbs = new List<Breadcrumb>();
+    private int Counter { get; set; }
+
+    protected override void OnInitialized()
+    {
+        var counter = 0;
+        var path = "";
+
+        // Get the URI using navigation manager
+        var uri = _navigationManager.Uri;
+
+        // Get the relative path from the uri and convert it to array
+        var relativePath = _navigationManager.ToBaseRelativePath(uri).Split("/");
+
+        // Create Bradcrumb
+        for(int i = 0; i < relativePath.Length; i++) {
+            path += $"/{relativePath[i].ToLower()}";
+            counter++;
+            var breadcrumb = new Breadcrumb();
+            breadcrumb.Order = counter;
+            breadcrumb.Title = relativePath[i].ToUpper();
+            breadcrumb.Url = path;
+            breadcrumb.Style = i < relativePath.Length - 1 ? "text-violet-60 cursor-pointer" : "";
+            
+            Breadcrumbs.Add(breadcrumb);
+
+            breadcrumb = new Breadcrumb();
+        }
+        
+
+    }
+}

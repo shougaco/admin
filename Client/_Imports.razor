@@ -1,0 +1,28 @@
+﻿@using System.Net.Http
+@using System.Net.Http.Json
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@using Microsoft.AspNetCore.Components.WebAssembly.Http
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.JSInterop
+@using Application.Client
+@using Application.Client.Shared
+@using MudBlazor
+@using Application.Client.Services
+@using Application.Client.Components
+@using Application.Shared.Models
+@using Application.Shared.Models.Enums
+@using Application.Shared.Models.Org
+@using Application.Shared.Models.Procurement
+@using Application.Shared.Models.ProductManagement
+
+
+@inject StateContainer _stateContainer
+@inject NavigationManager _navigationManager
+@inject ISnackbar Snackbar
+@inject HttpClient _client
+@inject IJSRuntime _jsRuntime

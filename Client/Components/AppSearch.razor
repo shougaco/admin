@@ -1,0 +1,128 @@
+@using Application.Shared.Models
+
+
+<!-- Modal -->
+<div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <div class="px-4 py-2">
+          <MudTextField id="searchInput" @bind-Value="TextValue" Label="Search" Variant="Variant.Outlined" 
+                        Adornment="Adornment.Start" AdornmentColor="Color.Secondary" AdornmentIcon="@Icons.Material.Filled.Search"
+                        DebounceInterval="200" OnDebounceIntervalElapsed="HandleIntervalElapsed"/>
+      </div>
+      
+      <div class="modal-body">
+          <div class="list-group">
+
+              @if(SearchModelsFiltered is not null) {
+                  foreach(var item in SearchModelsFiltered) {
+                        <a href="@item.Path" class="list-group-item list-group-item-action d-flex gap-3 py-3" aria-current="true">
+                          <div class="d-flex gap-2 w-100 justify-content-between"   data-bs-dismiss="modal" aria-label="Close">
+                            <div>
+                              <h6 class="mb-0">@item.Title</h6>
+                              <p class="mb-0 opacity-75">@item.Description</p>
+                              <p class="mb-0 opacity-75">/@item.Path</p>
+                            </div>
+                            <small class="opacity-50 text-nowrap">now</small>
+                          </div>
+                        </a>
+                  }
+
+              }
+              
+            </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+@code {
+    public string TextValue { get; set; }
+
+    SearchModel SearchModel = new SearchModel();
+    List<SearchModel> SearchModels = new List<SearchModel>();
+    List<SearchModel> SearchModelsFiltered { get; set; }
+
+    void HandleIntervalElapsed(string debouncedText)
+    {
+        if(String.IsNullOrEmpty(debouncedText)) {
+            SearchModelsFiltered = null;
+        }
+        else {
+            // check if any of the tags contains the debounced text
+        SearchModelsFiltered = SearchModels.Where(s => s.Tags.Any(t => t.Contains(debouncedText))).Take(5).ToList();
+        }
+
+        
+        
+    }
+
+
+    protected override void OnInitialized()
+    {
+        SearchModel = new SearchModel() {
+            Title = "Products",
+            Description = "Search for products",
+            Tags = new string[] { "product", "all products", "products" },
+            Path = "products"
+        };
+
+        SearchModels.Add(SearchModel);
+
+        SearchModel = new SearchModel() {
+            Title = "Add Products",
+            Description = "Search for products",
+            Tags = new string[] { "product", "all products", "add products", "add new products" },
+            Path = "products/add"
+        };
+
+        SearchModels.Add(SearchModel);
+
+        SearchModel = new SearchModel() {
+            Title = "Categories",
+            Description = "Search for categories",
+            Tags = new string[] { "category", "all categories", "categories" },
+            Path = "categories"
+        };
+
+        SearchModels.Add(SearchModel);
+
+        SearchModel = new SearchModel() {
+            Title = "Customers",
+            Description = "Search for Customers",
+            Tags = new string[] { "customer", "all customers", "customers" },
+            Path = "customers"
+        };
+
+        SearchModels.Add(SearchModel);
+
+        SearchModel = new SearchModel() {
+            Title = "Users",
+            Description = "Search for users",
+            Tags = new string[] { "user", "all users", "users" },
+            Path = "team"
+        };
+
+        SearchModels.Add(SearchModel);
+
+        SearchModel = new SearchModel() {
+            Title = "Add Members",
+            Description = "Add a new member to the company",
+            Tags = new string[] { "member", "member", "add member", "add new member", "add new members" },
+            Path = "team"
+        };
+
+        SearchModels.Add(SearchModel);
+
+
+    
+    }
+    
+}

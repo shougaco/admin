@@ -1,0 +1,115 @@
+@page "/products"
+
+
+
+
+<AuthorizeView Roles='@($"{Slug}-Customer, {Slug}-Owner")'>
+    <Authorized>
+        <div class="d-flex justify-content-between py-2 mb-2">
+            <Navigation />
+            <MudFab Variant="Variant.Outlined" DisableElevation="true" Color="Color.Default" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" Class="me-2" OnClick='@(() => Navigate("Products/add"))' />
+        </div>
+        <MudTable   Items="@Elements" MultiSelection="true" 
+                    Dense="true" Hover="true" HorizontalScrollbar="true"
+                    FixedHeader="@fixed_header" FixedFooter="@fixed_footer" Height="@(fixed_header || fixed_footer ?"650px":"")"
+                    Loading="@_loading" LoadingProgressColor="Color.Info"
+                    Filter="new Func<Product,bool>(FilterFunc1)" @bind-SelectedItems="selectedItems1"
+                    RowsPerPage=100
+                    Class="mb-3">
+            <ToolBarContent>
+
+                <MudText Typo="Typo.h6">Products</MudText>
+                <MudSpacer />
+                <MudTextField @bind-Value="searchString1" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Code</MudTh>
+                <MudTh>Brand</MudTh>
+                <MudTh>Description</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate Context="model">
+                <MudTd DataLabel="Product" Class='@(selectedItems1.Select(s => s.Id).Contains(model.Id) == true ? "fw-bold" : "")'>@model.Code</MudTd>
+                <MudTd DataLabel="Code" Class='@(selectedItems1.Select(s => s.Brand).Contains(model.Id) == true ? "fw-bold" : "")'>@model.Brand</MudTd>
+                <MudTd DataLabel="Description" Class='@(selectedItems1.Select(s => s.Id).Contains(model.Id) == true ? "fw-bold" : "")'>@model.Description</MudTd>
+                <MudTd DataLabel="Status" Class='@(selectedItems1.Select(s => s.Id).Contains(model.Id) == true ? "fw-bold" : "")'>@model.Status</MudTd>
+                <MudTd>
+                    <MudLink Href='@($"Products/catalog/{model.Code}")'><i class="bi bi-arrow-up-right-square"></i></MudLink>
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+        </MudTable>
+
+        <MudText Inline="true">Selected items: @(selectedItems1==null ? "" : string.Join(", ", selectedItems1.OrderBy(x=>x.Code).Select(x=>x.Code)))</MudText>
+    </Authorized>
+    <NotAuthorized>
+        <MudAlert Severity="Severity.Warning">You are not authorized to view this page</MudAlert>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+    [Parameter] public bool isSuccess { get; set; }
+    private string Slug => _stateContainer.Company is null ? "" : _stateContainer.Company.Slug;
+
+    bool fixed_header = true;
+    bool fixed_footer = true;
+    private bool _loading = false;
+    private string searchString1 = "";
+    private HashSet<Product> selectedItems1 = new HashSet<Product>();
+    private HashSet<Product> selectedItems = new HashSet<Product>();
+
+    private IEnumerable<Product> Elements = new List<Product>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+
+        if(!String.IsNullOrEmpty(_stateContainer.Company.Id)) {
+            await SetProductsAsync();
+        }
+        
+        _loading = false;
+
+        _stateContainer.OnChange += async () =>
+        {
+            await SetProductsAsync();
+            await InvokeAsync(StateHasChanged);
+        };
+    }
+
+    private async Task SetProductsAsync() {
+        try
+        {
+            Elements = await _client.GetFromJsonAsync<List<Product>>($"api/product?companyId={_stateContainer.Company.Id}");   
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+    private bool FilterFunc1(Product element) => FilterFunc(element, searchString1);
+
+    private bool FilterFunc(Product element, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.Code.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.Brand.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.Description.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    private void Navigate(string url)
+    {
+        _navigationManager.NavigateTo(url);
+    }
+}
+

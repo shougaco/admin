@@ -1,0 +1,55 @@
+@page "/suppliers/add"
+@inject ISnackbar Snackbar
+@inject NavigationManager _navigationManager
+@inject IJSRuntime _jsRuntime
+
+
+
+
+<div class="container my-5 bg-white rounded rounded-5 border shadow-sm p-5">
+    
+    <Navigation />
+
+    <MudText Class="mb-4" Typo="Typo.h6">Add a new supplier</MudText>
+
+    <EditForm Model="@Supplier" OnValidSubmit="OnValidSubmit">
+        <DataAnnotationsValidator/>
+
+        <MudTextField Label="Code" HelperText="Max. 10 characters" @bind-Value="Supplier.Code" For="@(() => Supplier.Code)" />
+        <MudTextField Label="Name" HelperText="Max. 20 characters" @bind-Value="Supplier.Name" For="@(() => Supplier.Name)" />
+            
+        <MudCardActions>
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Register</MudButton>
+        </MudCardActions>
+    </EditForm>
+
+
+</div>
+
+
+
+@code {
+    bool success;
+
+    private Supplier Supplier = new Supplier();
+
+    private async Task OnValidSubmit() 
+    {
+        Supplier.CompanyId = _stateContainer.Company.Id;
+        using var response = await _client.PostAsJsonAsync("/api/supplier", Supplier);
+
+        if(response.IsSuccessStatusCode)
+        {
+            success = true;
+            Snackbar.Add($"New supplier is created", Severity.Success);
+            _navigationManager.NavigateTo($"/suppliers");
+        }
+        else
+        {
+            success = false;
+            var error = await response.Content.ReadAsStringAsync();
+            Snackbar.Add($"{error}", Severity.Error);
+            
+        }
+    }
+}

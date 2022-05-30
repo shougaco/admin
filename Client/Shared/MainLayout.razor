@@ -1,0 +1,134 @@
+﻿@inherits LayoutComponentBase
+@inject IJSRuntime _jsRuntime
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="page bg-light">
+    <div class="sidebar bg-white border border-right">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4 auth d-flex justify-content-between bg-white border-bottom">
+                    
+                <div class="d-flex-content text-start">
+                    <div class="mb-show">
+                        <MudButton Variant="Variant.Text" StartIcon="@Icons.Outlined.Search" IconColor="Color.Secondary" data-bs-toggle="modal" data-bs-target="#searchModal">Search</MudButton>
+                    </div>
+                    <div class="dsk-show">
+                        <MudText Class="text-nowrap cursor-pointer " Typo="Typo.subtitle1" data-bs-toggle="modal" data-bs-target="#searchModal">Press here or type "<code>/</code>" to search</MudText>
+                    </div>
+                    
+                    
+                </div>
+                <div class="d-flex justify-content-end text-end">
+                    @if(Companies is not null) {
+                        <MudButton Class="me-1 text-nowrap px-5" 
+                                    Variant="Variant.Text"
+                                    Color="Color.Default"
+                                    Style="text-transform:none"
+                                    Size="Size.Large" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#chooseCompany">@(Company is null ? "Choose" : @Company.Slug)</MudButton>
+                    }
+                    <MudIconButton Class="me-1" Icon="@Icons.Outlined.Notifications" Color="Color.Primary" aria-label="alarm"></MudIconButton>
+                    <LoginDisplay />
+                </div>
+                
+            
+
+        </div>
+
+        <article class="content">
+            @Body
+        </article>
+    </main>
+</div>
+
+
+
+<MudThemeProvider/>
+<MudSnackbarProvider/>
+
+<AppSearch />
+
+
+<Modal Title="Switch company" ModalId="chooseCompany">
+    <Content>
+        @if(Companies is not null) {
+            foreach(var company in Companies) {
+                if(company.Id == Company.Id) {
+                    <MudButton Class="my-1" FullWidth="true" Variant="Variant.Outlined" Disabled="true" OnClick="@(() => SwitchCompany(company.Id))" data-bs-dismiss="modal" aria-label="Close">@company.Slug</MudButton>
+                }
+                else {
+                    <MudButton Class="my-1" FullWidth="true" Variant="Variant.Outlined" OnClick="@(() => SwitchCompany(company.Id))" data-bs-dismiss="modal" aria-label="Close">@company.Slug</MudButton>
+                }
+                
+            }
+        }
+        <MudButton Class="my-1" FullWidth="true" Variant="Variant.Outlined" Color="Color.Primary" OnClick='@(() => _navigationManager.NavigateTo("company/add"))' data-bs-dismiss="modal" aria-label="Close">
+            <MudIcon Icon="@Icons.Material.Filled.Add" Title="Add" Color="Color.Primary" Size="Size.Medium"/>
+            Add new Company
+        </MudButton>
+    </Content>
+</Modal>
+
+
+@code {
+
+    
+    public Company Company { get; set; }
+    public List<Company> Companies { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        // If the user is not authenticated navigate to the login page
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        
+        if(!user.Identity.IsAuthenticated) {
+            _navigationManager.NavigateTo("authentication/login");
+        }
+
+        var companyId = await _stateContainer.GetFromSessionStorage(_jsRuntime, "company");
+
+        if(!String.IsNullOrEmpty(companyId)) {
+            Company = await _client.GetFromJsonAsync<Company>($"api/company/{companyId}");
+        }
+        else {
+            var request = await _client.GetAsync($"api/company/filter?isDefault=true");
+            if(request.IsSuccessStatusCode) {
+                Company = request.Content.ReadFromJsonAsync<Company>().Result;
+            }
+            else {
+                _navigationManager.NavigateTo("company/add");
+            }
+        }
+
+        if(Company is not null) {
+            _stateContainer.Company = Company;
+            await _stateContainer.SaveInSessionStorage(_jsRuntime, "company", Company.Id);
+        }
+
+        Companies = await _client.GetFromJsonAsync<List<Company>>("/api/company");
+    }
+
+
+    private async Task SwitchCompany(string id)
+    {
+        var company = await _client.GetFromJsonAsync<Company>($"/api/company/{id}");
+        _stateContainer.Company = company;
+        await _stateContainer.SaveInSessionStorage(_jsRuntime, "company", company.Id);
+        _navigationManager.NavigateTo(_navigationManager.Uri, true, true);
+
+    }
+
+
+    public void Dispose()
+    {
+        _stateContainer.OnChange -= StateHasChanged;
+    }
+
+
+    
+}

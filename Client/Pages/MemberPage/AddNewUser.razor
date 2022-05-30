@@ -1,0 +1,129 @@
+@page "/team/add/new"
+@using Microsoft.AspNetCore.Identity
+@inject ISnackbar Snackbar
+@inject NavigationManager _navigationManager
+@inject IJSRuntime _jsRuntime
+
+
+
+
+<div class="container my-5 bg-white rounded rounded-5 border shadow-sm p-5">
+    <div class="d-flex justify-content-between">
+        <Navigation />
+    </div>
+    
+
+    <MudText Class="mb-4" Typo="Typo.h6">Add a new user</MudText>
+
+    <EditForm Model="@UserInputModel" OnValidSubmit="OnValidSubmit">
+        <DataAnnotationsValidator/>
+
+        <MudTextField Label="Username" @bind-Value="UserInputModel.UserName" For="@(() => UserInputModel.UserName)" />
+        <MudTextField Label="First Name" @bind-Value="UserInputModel.FirstName" For="@(() => UserInputModel.FirstName)" />
+        <MudTextField Label="Last Name" @bind-Value="UserInputModel.LastName" For="@(() => UserInputModel.LastName)" />
+        <MudTextField Label="Email" @bind-Value="UserInputModel.Email" For="@(() => UserInputModel.Email)" />
+        <MudTextField @bind-Value="UserInputModel.Password" Label="Password" Variant="Variant.Text" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ButtonTestclick" AdornmentAriaLabel="Show Password" />
+        <MudTextField @bind-Value="UserInputModel.ConfirmPassword" Label="Password" Variant="Variant.Text" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ButtonTestclick" AdornmentAriaLabel="Show Password" />
+            
+        @if(Roles is not null) {
+            <MudSelect Class="mt-4" MultiSelectionTextFunc="@(new Func<List<string>, string>(GetMultiSelectionText))" T="string" Label="Roles" MultiSelection="true" @bind-Value="value" @bind-SelectedValues='options'>
+                @foreach (var role in Roles)
+                {
+                    <MudSelectItem T="string" Value="@role.Name">@role.Name.Split("-")[1].Replace(" ","")</MudSelectItem>
+                }
+            </MudSelect>
+        }
+
+        @if(value.Contains("Supplier")){
+            <MudSelect T="string" @bind-Value="supplierValue" Label="Link supplier code" AnchorOrigin="Origin.BottomCenter">
+                @foreach(var supplier in Suppliers)
+                {
+                    <MudSelectItem T="string" Value="@supplier.Id">@supplier.Code - @supplier.Name</MudSelectItem>
+                }
+            </MudSelect>
+        }
+
+        
+        <MudCardActions Class="mt-4">
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="OnValidSubmit">Register</MudButton>
+        </MudCardActions>
+
+    </EditForm>
+
+
+</div>
+
+
+
+@code {
+    MudForm form;
+    bool success;
+    bool isShow;
+    InputType PasswordInput = InputType.Password;
+    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    private UserInputModel UserInputModel = new UserInputModel();
+
+    private string Username { get; set; }
+    private string value { get; set; } = "Nothing selected";
+    private IEnumerable<string> options { get; set; } = new HashSet<string>();
+    private List<IdentityRole>? Roles { get; set; }
+    private List<Supplier>? Suppliers { get; set; }
+    private Supplier SelectedSupplier => !String.IsNullOrEmpty(supplierValue) ? Suppliers.FirstOrDefault(s => s.Id == supplierValue) : null;
+
+    private string supplierValue { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        Roles = await _client.GetFromJsonAsync<List<IdentityRole>>($"/api/role?companyId={_stateContainer.Company.Id}");
+        Suppliers = await _client.GetFromJsonAsync<List<Supplier>>($"/api/supplier?companyId={_stateContainer.Company.Id}");
+    }
+
+    private string GetMultiSelectionText(List<string> selectedValues)
+    {
+
+        return $"{string.Join(", ", selectedValues.Select(x => x.Replace($"{_stateContainer.Company.Slug}-", "")))}";
+    }
+
+    void ButtonTestclick()
+    {
+        @if (isShow)
+        {
+            isShow = false;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+        else {
+            isShow = true;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
+        }
+    }
+
+    private async Task OnValidSubmit() 
+    {
+        @if(SelectedSupplier is not null) {
+            UserInputModel.SupplierId = SelectedSupplier.Id;
+        }
+        var selectedRoles = Roles.Where(x => options.Contains(x.Name)).Select(x => x.Name).ToArray();
+        UserInputModel.RoleNames = selectedRoles;
+        var response = await _client.PostAsJsonAsync($"/api/user?companyId={_stateContainer.Company.Id}", UserInputModel);
+
+        if(response.IsSuccessStatusCode)
+        {
+            success = true;
+            Snackbar.Add($"New Member is created", Severity.Success);
+            _navigationManager.NavigateTo($"/team");
+        }
+        else
+        {
+            success = false;
+            var error = await response.Content.ReadAsStringAsync();
+            Snackbar.Add($"{error}", Severity.Error);
+            
+        }
+    }
+}
+
+
