@@ -1,26 +1,39 @@
 @page "/company/{isSuccess:bool?}"
 @attribute [Authorize]
 
-<AuthorizeView Roles='@($"{Slug}-Owner")'>
-    <Authorized>
-        <div class="container my-5 bg-white rounded rounded-5 border shadow-sm p-5">
 
+<MudContainer MaxWidth="MaxWidth.Large">
+    <MudGrid>
+        <MudItem xs="12" lg="12">
             <Navigation />
-            @if(Company is not null) {
+            <MudPaper Elevation="25" >
+                <MudToolBar>
+                    <MudIconButton Icon="@Icons.Material.Outlined.ArrowBack" Color="Color.Inherit" Class="mr-1" OnClick="GoBackAsync"/>
+                    <MudText Class="py-1 text-nowrap" Typo="Typo.body1">Company details</MudText>
+                    <MudSpacer />
+                    <MudIconButton Icon="@Icons.Material.Outlined.Add" OnClick='@(() => Navigate("company/add"))' />
+                    <MudIconButton Icon="@Icons.Material.Outlined.MoreVert" Color="Color.Inherit"/>
+                </MudToolBar>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" lg="12">
+            <MudPaper Elevation="25" Class="p-4">
+                 @if(Company is not null) {
+                    <MudText Class="my-3" Align="Align.Left">
+                        <b class="me-5">Id</b> 
+                        @Company.Id
+                    </MudText>
+                    <MudText Class="my-3" Align="Align.Left">
+                        <b class="me-5">Name</b> 
+                        @Company.Name
+                    </MudText>
+                    <MudText Class="my-3" Align="Align.Left">
+                            <b class="me-5">Description</b> 
+                            @Company.Description
+                    </MudText>
+                }
                 <MudText Class="my-3" Align="Align.Left">
-                    <b class="me-5">Id</b> 
-                    @Company.Id
-                </MudText>
-                <MudText Class="my-3" Align="Align.Left">
-                    <b class="me-5">Name</b> 
-                    @Company.Name
-                </MudText>
-                <MudText Class="my-3" Align="Align.Left">
-                    <b class="me-5">Description</b> 
-                    @Company.Description
-                </MudText>
-            }
-            <MudText Class="my-3" Align="Align.Left">
                 <b class="me-5">Your API Key</b> 
                 @if(ApiKey is null) {
                     <MudButton Variant="Variant.Filled" Size="Size.Small" Color="Color.Primary">Generate API Key</MudButton>
@@ -29,14 +42,12 @@
                     @ApiKey.Key
                 }
 
-            </MudText>
-        </div>
-    </Authorized>
+                </MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
 
-    <NotAuthorized>
-        <MudAlert Severity="Severity.Warning">You are not authorized to view this page</MudAlert>
-    </NotAuthorized>
-</AuthorizeView>
 
 
 @code {
@@ -82,5 +93,15 @@
         {
             exception.Redirect();
         }
+    }
+
+    private void Navigate(string url)
+    {
+        _navigationManager.NavigateTo(url);
+    }
+
+    private async void GoBackAsync()
+    {
+        await _jsRuntime.InvokeVoidAsync("history.back");
     }
 }

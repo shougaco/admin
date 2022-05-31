@@ -6,25 +6,40 @@
 
 
 
-<div class="container my-5 bg-white rounded rounded-5 border shadow-sm p-5">
-    
-    <Navigation />
+<MudContainer MaxWidth="MaxWidth.Large">
+    <MudGrid>
+        <MudItem xs="12" lg="12">
+            <Navigation />
+            <MudPaper Elevation="25" >
+                <MudToolBar>
+                    <MudIconButton Icon="@Icons.Material.Outlined.ArrowBack" Color="Color.Inherit" Class="mr-1" OnClick='@(() => Navigate("suppliers"))'/>
+                    <MudText Class="py-1 text-nowrap" Typo="Typo.body1">Add a new supplier</MudText>
+                    <MudSpacer />
+                    <MudIconButton Icon="@Icons.Material.Outlined.MoreVert" Color="Color.Inherit" />
+                </MudToolBar>
+            </MudPaper>
+        </MudItem>
 
-    <MudText Class="mb-4" Typo="Typo.h6">Add a new supplier</MudText>
+        <MudItem xs="12" lg="12">
+            <MudPaper Elevation="25" Class="p-4">
+                <MudText Class="pb-3 text-nowrap fw-bold" Typo="Typo.body1">Supplier details</MudText>
+                <EditForm Model="@Supplier" OnValidSubmit="OnValidSubmit">
+                    <DataAnnotationsValidator/>
 
-    <EditForm Model="@Supplier" OnValidSubmit="OnValidSubmit">
-        <DataAnnotationsValidator/>
+                    <MudTextField Label="Code" HelperText="Max. 10 characters" @bind-Value="Supplier.Code" For="@(() => Supplier.Code)" />
+                    <MudTextField Label="Name" HelperText="Max. 20 characters" @bind-Value="Supplier.Name" For="@(() => Supplier.Name)" />
 
-        <MudTextField Label="Code" HelperText="Max. 10 characters" @bind-Value="Supplier.Code" For="@(() => Supplier.Code)" />
-        <MudTextField Label="Name" HelperText="Max. 20 characters" @bind-Value="Supplier.Name" For="@(() => Supplier.Name)" />
-            
-        <MudCardActions>
-            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Register</MudButton>
-        </MudCardActions>
-    </EditForm>
+                    <MudCardActions>
+                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Register</MudButton>
+                    </MudCardActions>
+                </EditForm>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+</MudContainer>
 
 
-</div>
 
 
 
@@ -51,5 +66,10 @@
             Snackbar.Add($"{error}", Severity.Error);
             
         }
+    }
+
+    private void Navigate(string url)
+    {
+        _navigationManager.NavigateTo(url);
     }
 }

@@ -2,40 +2,36 @@
 
 
 <MudContainer MaxWidth="MaxWidth.Large">
+    <MudGrid>
+        <MudItem xs="12" lg="12">
+            <Navigation />
+            <MudPaper Elevation="25" >
+                <MudToolBar>
+                    <MudIconButton Icon="@Icons.Material.Outlined.ArrowBack" Color="Color.Inherit" Class="mr-1" OnClick='@(() => Navigate("collections"))'/>
+                    <MudText Class="py-1 text-nowrap" Typo="Typo.body1">Add a new Collection</MudText>
+                    <MudSpacer />
+                    <MudIconButton Icon="@Icons.Material.Outlined.MoreVert" Color="Color.Inherit" />
+                </MudToolBar>
+            </MudPaper>
+        </MudItem>
 
-    
-<MudGrid>
-    <MudItem xs="12" lg="12">
-        <Navigation />
-        <MudPaper Elevation="25" >
-            <MudToolBar>
-                <MudIconButton Icon="@Icons.Material.Outlined.ArrowBack" Color="Color.Inherit" Class="mr-1" />
-                <MudText Class="py-1 text-nowrap" Typo="Typo.body1">Add a new Collection</MudText>
-                <MudSpacer />
-                <MudIconButton Icon="@Icons.Material.Outlined.MoreVert" Color="Color.Inherit" />
-            </MudToolBar>
-        </MudPaper>
-    </MudItem>
-
-    <MudItem xs="12" lg="12">
-        <MudPaper Elevation="25" Class="p-4">
-            <MudText Class="pb-3 text-nowrap fw-bold" Typo="Typo.body1">Collection details</MudText>
+        <MudItem xs="12" lg="12">
+            <MudPaper Elevation="25" Class="p-4">
+                <MudText Class="pb-3 text-nowrap fw-bold" Typo="Typo.body1">Collection details</MudText>
                 <EditForm Model="@Collection" OnValidSubmit="OnValidSubmit">
                     <DataAnnotationsValidator/>
 
                     <MudTextField Label="Name" HelperText="Max. 10 characters" @bind-Value="Collection.Name" For="@(() => Collection.Name)" />
                     <MudTextField Label="Description" HelperText="Max. 10 characters" @bind-Value="Collection.Description" For="@(() => Collection.Description)" />
                     <MudTextField Immediate="true" Label="Handle" HelperText="@HandleHelperText" @bind-Value='Collection.Handle' For="@(() => Collection.Handle)" />
-
+                        
                     <MudCardActions>
                         <MudButton ButtonType="ButtonType.Submit" Variant="MudBlazor.Variant.Filled" Color="Color.Primary" Class="ml-auto">Add</MudButton>
                     </MudCardActions>
                 </EditForm>
-        </MudPaper>
-    </MudItem>
-
-
-</MudGrid>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
 
 </MudContainer>
     
@@ -69,5 +65,10 @@
             Snackbar.Add($"{error}", Severity.Error);
             
         }
+    }
+
+    private void Navigate(string url)
+    {
+        _navigationManager.NavigateTo(url);
     }
 }

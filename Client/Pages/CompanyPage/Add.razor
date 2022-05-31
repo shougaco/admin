@@ -1,31 +1,41 @@
 @page "/company/add"
 
 
+<MudContainer MaxWidth="MaxWidth.Large">
+    <MudGrid>
+        <MudItem xs="12" lg="12">
+            <Navigation />
+            <MudPaper Elevation="25" >
+                <MudToolBar>
+                    <MudIconButton Icon="@Icons.Material.Outlined.ArrowBack" Color="Color.Inherit" Class="mr-1" OnClick='@(() => Navigate("company"))'/>
+                    <MudText Class="py-1 text-nowrap" Typo="Typo.body1">Add a new Company</MudText>
+                    <MudSpacer />
+                    <MudIconButton Icon="@Icons.Material.Outlined.MoreVert" Color="Color.Inherit" />
+                </MudToolBar>
+            </MudPaper>
+        </MudItem>
 
+        <MudItem xs="12" lg="12">
+            <MudPaper Elevation="25" Class="p-4">
+                <MudText Class="pb-3 text-nowrap fw-bold" Typo="Typo.body1">Company details</MudText>
+                <EditForm Model="@Company" OnValidSubmit="OnValidSubmit" OnInvalidSubmit="OnInvalidSubmit">
+                    <DataAnnotationsValidator/>
 
+                    <MudTextField Label="Name" HelperText="Max. 20 characters" @bind-Value="Company.Name" For="@(() => Company.Name)" />
 
-<div class="container my-5 bg-white rounded rounded-5 border shadow-sm p-5">
-    
-    <Navigation />
+                    <MudTextField Label="Handle" HelperText="Max. 10 characters" @bind-Value='Company.Slug' For="@(() => Company.Slug)"/>
+                    
+                    <MudSwitch Class="my-5" @bind-Checked="isCustomer" Color="Color.Error"> I am a <strong>@(companyType.ToString().ToUpper())</strong></MudSwitch>
 
-    <MudText Class="mb-4" Typo="Typo.h6">Add a new Company</MudText>
+                    <MudCardActions>
+                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Register</MudButton>
+                    </MudCardActions>
+                </EditForm>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
 
-    <EditForm Model="@Company" OnValidSubmit="OnValidSubmit" OnInvalidSubmit="OnInvalidSubmit">
-        <DataAnnotationsValidator/>
-
-        <MudTextField Label="Name" HelperText="Max. 20 characters" @bind-Value="Company.Name" For="@(() => Company.Name)" />
-            
-        <MudTextField Label="Handle" HelperText="Max. 10 characters" @bind-Value='Company.Slug' For="@(() => Company.Slug)"/>
-
-        <MudSwitch Class="my-5" @bind-Checked="isCustomer" Color="Color.Error"> I am a <strong>@(companyType.ToString().ToUpper())</strong></MudSwitch>
-
-        <MudCardActions>
-            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Register</MudButton>
-        </MudCardActions>
-    </EditForm>
-
-
-</div>
+</MudContainer>
 
 
 
@@ -65,5 +75,10 @@
     {
         success = false;
         Snackbar.Add($"Something went wrong! Please make sure you filled all the highlighted fields", Severity.Error);
+    }
+
+    private void Navigate(string url)
+    {
+        _navigationManager.NavigateTo(url);
     }
 }

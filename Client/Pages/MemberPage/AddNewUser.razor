@@ -1,57 +1,58 @@
-@page "/team/add/new"
+@page "/members/add/new"
 @using Microsoft.AspNetCore.Identity
 @inject ISnackbar Snackbar
 @inject NavigationManager _navigationManager
 @inject IJSRuntime _jsRuntime
 
 
+<MudContainer MaxWidth="MaxWidth.Large">
+    <MudGrid>
+        <MudItem xs="12" lg="12">
+            <Navigation />
+            <MudPaper Elevation="25" >
+                <MudToolBar>
+                    <MudIconButton Icon="@Icons.Material.Outlined.ArrowBack" Color="Color.Inherit" Class="mr-1" OnClick='@(() => Navigate("members/add"))'/>
+                    <MudText Class="py-1 text-nowrap" Typo="Typo.body1">Add a new User</MudText>
+                    <MudSpacer />
+                    <MudIconButton Icon="@Icons.Material.Outlined.MoreVert" Color="Color.Inherit" />
+                </MudToolBar>
+            </MudPaper>
+        </MudItem>
 
+        <MudItem xs="12" lg="12">
+            <MudPaper Elevation="25" Class="p-4">
+                <MudText Class="pb-3 text-nowrap fw-bold" Typo="Typo.body1">User details</MudText>
+                    <EditForm Model="@UserInputModel" OnValidSubmit="OnValidSubmit">
+                        <DataAnnotationsValidator/>
+                
+                        <MudTextField Label="Username" @bind-Value="UserInputModel.UserName" For="@(() => UserInputModel.UserName)" />
+                        <MudTextField Label="First Name" @bind-Value="UserInputModel.FirstName" For="@(() => UserInputModel.FirstName)" />
+                        <MudTextField Label="Last Name" @bind-Value="UserInputModel.LastName" For="@(() => UserInputModel.LastName)" />
+                        <MudTextField Label="Email" @bind-Value="UserInputModel.Email" For="@(() => UserInputModel.Email)" />
+                        <MudTextField @bind-Value="UserInputModel.Password" Label="Password" Variant="Variant.Text" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ButtonTestclick" AdornmentAriaLabel="Show Password" />
+                        <MudTextField @bind-Value="UserInputModel.ConfirmPassword" Label="Password" Variant="Variant.Text" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ButtonTestclick" AdornmentAriaLabel="Show Password" />
+                            
+                        @if(Roles is not null) {
+                            <MudSelect Class="mt-4" MultiSelectionTextFunc="@(new Func<List<string>, string>(GetMultiSelectionText))" T="string" Label="Roles" MultiSelection="true" @bind-Value="value" @bind-SelectedValues='options'>
+                                @foreach (var role in Roles)
+                                {
+                                    <MudSelectItem T="string" Value="@role.Name">@role.Name.Split("-")[1].Replace(" ","")</MudSelectItem>
+                                }
+                            </MudSelect>
+                        }
 
-<div class="container my-5 bg-white rounded rounded-5 border shadow-sm p-5">
-    <div class="d-flex justify-content-between">
-        <Navigation />
-    </div>
-    
+                
+                        
+                        <MudCardActions Class="mt-4">
+                            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="OnValidSubmit">Register</MudButton>
+                        </MudCardActions>
+                
+                    </EditForm>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
 
-    <MudText Class="mb-4" Typo="Typo.h6">Add a new user</MudText>
-
-    <EditForm Model="@UserInputModel" OnValidSubmit="OnValidSubmit">
-        <DataAnnotationsValidator/>
-
-        <MudTextField Label="Username" @bind-Value="UserInputModel.UserName" For="@(() => UserInputModel.UserName)" />
-        <MudTextField Label="First Name" @bind-Value="UserInputModel.FirstName" For="@(() => UserInputModel.FirstName)" />
-        <MudTextField Label="Last Name" @bind-Value="UserInputModel.LastName" For="@(() => UserInputModel.LastName)" />
-        <MudTextField Label="Email" @bind-Value="UserInputModel.Email" For="@(() => UserInputModel.Email)" />
-        <MudTextField @bind-Value="UserInputModel.Password" Label="Password" Variant="Variant.Text" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ButtonTestclick" AdornmentAriaLabel="Show Password" />
-        <MudTextField @bind-Value="UserInputModel.ConfirmPassword" Label="Password" Variant="Variant.Text" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ButtonTestclick" AdornmentAriaLabel="Show Password" />
-            
-        @if(Roles is not null) {
-            <MudSelect Class="mt-4" MultiSelectionTextFunc="@(new Func<List<string>, string>(GetMultiSelectionText))" T="string" Label="Roles" MultiSelection="true" @bind-Value="value" @bind-SelectedValues='options'>
-                @foreach (var role in Roles)
-                {
-                    <MudSelectItem T="string" Value="@role.Name">@role.Name.Split("-")[1].Replace(" ","")</MudSelectItem>
-                }
-            </MudSelect>
-        }
-
-        @if(value.Contains("Supplier")){
-            <MudSelect T="string" @bind-Value="supplierValue" Label="Link supplier code" AnchorOrigin="Origin.BottomCenter">
-                @foreach(var supplier in Suppliers)
-                {
-                    <MudSelectItem T="string" Value="@supplier.Id">@supplier.Code - @supplier.Name</MudSelectItem>
-                }
-            </MudSelect>
-        }
-
-        
-        <MudCardActions Class="mt-4">
-            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="OnValidSubmit">Register</MudButton>
-        </MudCardActions>
-
-    </EditForm>
-
-
-</div>
+</MudContainer>
 
 
 
@@ -123,6 +124,11 @@
             Snackbar.Add($"{error}", Severity.Error);
             
         }
+    }
+
+    private void Navigate(string url)
+    {
+        _navigationManager.NavigateTo(url);
     }
 }
 

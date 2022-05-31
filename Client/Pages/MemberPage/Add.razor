@@ -1,34 +1,43 @@
-@page "/team/add"
+@page "/members/add"
 @inject ISnackbar Snackbar
 @inject NavigationManager _navigationManager
 @inject IJSRuntime _jsRuntime
 
 
 
+<MudContainer MaxWidth="MaxWidth.Large">
+    <MudGrid>
+        <MudItem xs="12" lg="12">
+            <Navigation />
+            <MudPaper Elevation="25" >
+                <MudToolBar>
+                    <MudIconButton Icon="@Icons.Material.Outlined.ArrowBack" Color="Color.Inherit" Class="mr-1" OnClick='@(() => Navigate("members"))'/>
+                    <MudText Class="py-1 text-nowrap" Typo="Typo.body1">Add a new member</MudText>
+                    <MudSpacer />
+                    <MudLink Class="text-nowrap" Href="members/add/new"> Create new User</MudLink>
+                    <MudIconButton Icon="@Icons.Material.Outlined.MoreVert" Color="Color.Inherit" />
+                </MudToolBar>
+            </MudPaper>
+        </MudItem>
 
-<div class="container my-5 bg-white rounded rounded-5 border shadow-sm p-5">
-    <div class="d-flex justify-content-between">
-        <Navigation />
-        <MudSpacer />
-        <MudLink Class="text-nowrap" Href="team/add/new"> Create new User</MudLink>
-    </div>
-    
+        <MudItem xs="12" lg="12">
+            <MudPaper Elevation="25" Class="p-4">
+                <MudText Class="pb-3 text-nowrap fw-bold" Typo="Typo.body1">Member details</MudText>
+                <EditForm Model="@Member" OnValidSubmit="OnValidSubmit">
+                    <DataAnnotationsValidator/>
 
-    <MudText Class="mb-4" Typo="Typo.h6">Add a new member</MudText>
+                    <MudTextField Label="Username" HelperText="Max. 10 characters" @bind-Value="Username" For="@(() => Username)" />
+                        
+                    <MudCardActions Class="mt-4">
+                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Register</MudButton>
+                        
+                    </MudCardActions>
+                </EditForm>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
 
-    <EditForm Model="@Member" OnValidSubmit="OnValidSubmit">
-        <DataAnnotationsValidator/>
-
-        <MudTextField Label="Username" HelperText="Max. 10 characters" @bind-Value="Username" For="@(() => Username)" />
-            
-        <MudCardActions Class="mt-4">
-            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Register</MudButton>
-            
-        </MudCardActions>
-    </EditForm>
-
-
-</div>
+</MudContainer>
 
 
 
@@ -57,5 +66,10 @@
             Snackbar.Add($"{error}", Severity.Error);
             
         }
+    }
+
+    private void Navigate(string url)
+    {
+        _navigationManager.NavigateTo(url);
     }
 }

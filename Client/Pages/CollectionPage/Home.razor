@@ -2,49 +2,55 @@
 
 
 
-
-<AuthorizeView>
-    <Authorized>
-        <div class="d-flex justify-content-between py-2 mb-2">
+<MudContainer MaxWidth="MaxWidth.Large">
+    <MudGrid>
+        <MudItem xs="12" lg="12">
             <Navigation />
-            <MudFab Variant="Variant.Outlined" DisableElevation="true" Color="Color.Default" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" Class="me-2" OnClick='@(() => Navigate("Collections/add"))' />
-        </div>
-        <MudTable   Items="@Elements" MultiSelection="true" 
-                    Dense="true" Hover="true" HorizontalScrollbar="true"
-                    FixedHeader="@fixed_header" FixedFooter="@fixed_footer" Height="@(fixed_header || fixed_footer ?"650px":"")"
+            <MudPaper Elevation="25" >
+                <MudToolBar>
+                    <MudIconButton Icon="@Icons.Material.Outlined.ArrowBack" Color="Color.Inherit" Class="mr-1" OnClick="GoBackAsync"/>
+                    <MudText Class="py-1 text-nowrap" Typo="Typo.body1">All Collections</MudText>
+                    <MudSpacer />
+                    <MudIconButton Icon="@Icons.Material.Outlined.Add" OnClick='@(() => Navigate("collections/add"))' />
+                    <MudIconButton Icon="@Icons.Material.Outlined.MoreVert" Color="Color.Inherit"/>
+                </MudToolBar>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" lg="12">
+            <MudPaper Elevation="25" Class="p-4">
+                <MudTable   Items="@Elements" MultiSelection="true" 
+                    Dense="false" Hover="true" HorizontalScrollbar="true"
+                    FixedHeader="@fixed_header" FixedFooter="@fixed_footer" Height="@(fixed_header || fixed_footer ?"550px":"")"
                     Loading="@_loading" LoadingProgressColor="Color.Info"
-                    Filter="new Func<Collection,bool>(FilterFunc1)" @bind-SelectedItems="selectedItems1"
+                    Filter="new Func<Collection ,bool>(FilterFunc1)" @bind-SelectedItems="selectedItems"
                     RowsPerPage=100
-                    Class="mb-3">
-            <ToolBarContent>
+                    Class="mb-3"
+                    Elevation="0">
 
-                <MudText Typo="Typo.h6">Collections</MudText>
-                <MudSpacer />
-                <MudTextField @bind-Value="searchString1" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
-            </ToolBarContent>
-            <HeaderContent>
-                <MudTh>Name</MudTh>
-                <MudTh>Description</MudTh>
-                <MudTh></MudTh>
-            </HeaderContent>
-            <RowTemplate Context="model">
-                <MudTd DataLabel="Name" Class='@(selectedItems1.Select(s => s.Id).Contains(model.Id) == true ? "fw-bold" : "")'>@model.Name</MudTd>
-                <MudTd DataLabel="Description" Class='@(selectedItems1.Select(s => s.Id).Contains(model.Id) == true ? "fw-bold" : "")'>@model.Description</MudTd>
-                <MudTd>
-                    <MudLink Href='@($"Collections/catalog/{model.Name}")'><i class="bi bi-arrow-up-right-square"></i></MudLink>
-                </MudTd>
-            </RowTemplate>
-            <PagerContent>
-                <MudTablePager />
-            </PagerContent>
-        </MudTable>
+                    <ToolBarContent>
+                        <MudText Typo="Typo.h6">Collections</MudText>
+                        <MudSpacer />
+                        <MudTextField @bind-Value="searchString1" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                    </ToolBarContent>
+                    <HeaderContent>
+                        <MudTh>Name</MudTh>
+                        <MudTh>Description</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Name" Class='@(selectedItems.Select(s => s.Id).Contains(context.Id) == true ? "fw-bold" : "")'>@context.Name</MudTd>
+                        <MudTd DataLabel="Description" Class='@(selectedItems.Select(s => s.Id).Contains(context.Id) == true ? "fw-bold" : "")'>@context.Description</MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager />
+                    </PagerContent>
+                </MudTable>
 
-        <MudText Inline="true">Selected items: @(selectedItems1==null ? "" : string.Join(", ", selectedItems1.OrderBy(x=>x.Name).Select(x=>x.Name)))</MudText>
-    </Authorized>
-    <NotAuthorized>
-        <MudAlert Severity="Severity.Warning">You are not authorized to view this page</MudAlert>
-    </NotAuthorized>
-</AuthorizeView>
+                <MudText Inline="true">Selected items: @(selectedItems==null ? "" : string.Join(", ", selectedItems.OrderBy(x=>x.Name).Select(x=>x.Name)))</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
 
 
 @code {
@@ -55,7 +61,8 @@
     bool fixed_footer = true;
     private bool _loading = false;
     private string searchString1 = "";
-    private HashSet<Collection> selectedItems1 = new HashSet<Collection>();
+    private bool FilterFunc1(Collection element) => FilterFunc(element, searchString1);
+
     private HashSet<Collection> selectedItems = new HashSet<Collection>();
 
     private IEnumerable<Collection> Elements = new List<Collection>();
@@ -88,8 +95,6 @@
         }
     }
 
-    private bool FilterFunc1(Collection element) => FilterFunc(element, searchString1);
-
     private bool FilterFunc(Collection element, string searchString)
     {
         if (string.IsNullOrWhiteSpace(searchString))
@@ -104,6 +109,11 @@
     private void Navigate(string url)
     {
         _navigationManager.NavigateTo(url);
+    }
+
+    private async void GoBackAsync()
+    {
+        await _jsRuntime.InvokeVoidAsync("history.back");
     }
 }
 
