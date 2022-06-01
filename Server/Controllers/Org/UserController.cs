@@ -44,57 +44,51 @@ public class UsersController : ControllerBase
         }
         
         if(!UsernameExists(userInputModel.UserName) && !EmailExists(userInputModel.Email)) {
-            
-            var user = new ApplicationUser() {
-                UserName = userInputModel.UserName,
-                Email = userInputModel.Email,
-                EmailConfirmed = true,
-                Password = userInputModel.Password
-            };
-            
-            await _userStore.SetUserNameAsync(user, user.UserName, CancellationToken.None);
-            await _emailStore.SetEmailAsync(user, user.Email, CancellationToken.None);
 
-            await _userManager.CreateAsync(user, user.Password);
+            var user = CreateUser();
 
-            if(!String.IsNullOrEmpty(companyId)){
-                // add member
-                var member = new Member() {
+            user.EmailConfirmed = true;
+
+            await _userStore.SetUserNameAsync(user, userInputModel.UserName, CancellationToken.None);
+            await _emailStore.SetEmailAsync(user, userInputModel.Email, CancellationToken.None);
+
+            var result = await _userManager.CreateAsync(user, userInputModel.Password);
+
+            if(result.Succeeded) {
+
+                if(!String.IsNullOrEmpty(companyId)){
+                    // add member
+                    var member = new Member() {
+                        ApplicationUserId = user.Id,
+                        CompanyId = companyId
+                    };
+
+                    _context.Member.Add(member);
+                    await _context.SaveChangesAsync();
+                }
+
+                // await _userManager.AddToRolesAsync(user, userInputModel.RoleNames);
+                foreach(var role in userInputModel.RoleNames) {
+                    await _userManager.AddToRoleAsync(user, role);
+                }
+
+                var apiKeyController = new ApiKeyController(_context, _userManager, _verification);    
+                var apiKey = new ApiKey() {
                     ApplicationUserId = user.Id,
                     CompanyId = companyId
                 };
 
-                _context.Member.Add(member);
-                await _context.SaveChangesAsync();
-            }
-
-            await _userManager.AddToRolesAsync(user, userInputModel.RoleNames);
-
-            var apiKeyController = new ApiKeyController(_context, _userManager, _verification);    
-            var apiKey = new ApiKey() {
-                ApplicationUserId = user.Id,
-                CompanyId = companyId
-            };
-
-            await apiKeyController.PostApiKey(apiKey, companyId, user.Id);
-
-            var company = await _context.Company.FirstOrDefaultAsync(c => c.Id == companyId);
-            if(userInputModel.RoleNames.Contains($"{company.Slug.ToLower()}-Supplier")) {
-                // add supplier user
-                var supplierUser = new SupplierUser() {
-                    ApplicationUserId = user.Id,
-                    SupplierId = userInputModel.SupplierId
-                };
-
-                _context.SupplierUser.Add(supplierUser);
-                await _context.SaveChangesAsync();
+                await apiKeyController.PostApiKey(apiKey, companyId, user.Id);
             }
 
             //return CreatedAtAction("GetUserByIdAsync", new { id = userId }, user); 
             return user;
         }
+        else if(UsernameExists(userInputModel.UserName)){
+            return StatusCode(406, $"The username already exists.");  
+        }
         else {
-            return StatusCode(406, $"The username or email already exists.");  
+            return StatusCode(406, $"The email already exists.");  
         }
 
     }
@@ -157,6 +151,20 @@ public class UsersController : ControllerBase
             throw new NotSupportedException("The default UI requires a user store with email support.");
         }
         return (IUserEmailStore<ApplicationUser>)_userStore;
+    }
+
+    private ApplicationUser CreateUser()
+    {
+        try
+        {
+            return Activator.CreateInstance<ApplicationUser>();
+        }
+        catch
+        {
+            throw new InvalidOperationException($"Can't create an instance of '{nameof(ApplicationUser)}'. " +
+                $"Ensure that '{nameof(ApplicationUser)}' is not an abstract class and has a parameterless constructor, or alternatively " +
+                $"override the register page in /Areas/Identity/Pages/Account/Register.cshtml");
+        }
     }
     
 }

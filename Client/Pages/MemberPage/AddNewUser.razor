@@ -1,5 +1,6 @@
 @page "/members/add/new"
 @using Microsoft.AspNetCore.Identity
+@using System.ComponentModel.DataAnnotations
 @inject ISnackbar Snackbar
 @inject NavigationManager _navigationManager
 @inject IJSRuntime _jsRuntime
@@ -22,15 +23,15 @@
         <MudItem xs="12" lg="12">
             <MudPaper Elevation="25" Class="p-4">
                 <MudText Class="pb-3 text-nowrap fw-bold" Typo="Typo.body1">User details</MudText>
-                    <EditForm Model="@UserInputModel" OnValidSubmit="OnValidSubmit">
+                    <EditForm Model="@UserInputModel" OnValidSubmit="OnValidSubmit" OnInvalidSubmit="OnInvalidSubmit">
                         <DataAnnotationsValidator/>
                 
                         <MudTextField Label="Username" @bind-Value="UserInputModel.UserName" For="@(() => UserInputModel.UserName)" />
                         <MudTextField Label="First Name" @bind-Value="UserInputModel.FirstName" For="@(() => UserInputModel.FirstName)" />
                         <MudTextField Label="Last Name" @bind-Value="UserInputModel.LastName" For="@(() => UserInputModel.LastName)" />
                         <MudTextField Label="Email" @bind-Value="UserInputModel.Email" For="@(() => UserInputModel.Email)" />
-                        <MudTextField @bind-Value="UserInputModel.Password" Label="Password" Variant="Variant.Text" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ButtonTestclick" AdornmentAriaLabel="Show Password" />
-                        <MudTextField @bind-Value="UserInputModel.ConfirmPassword" Label="Password" Variant="Variant.Text" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ButtonTestclick" AdornmentAriaLabel="Show Password" />
+                        <MudTextField @bind-Value="UserInputModel.Password" Label="Password" Variant="Variant.Text" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ButtonTestclick" AdornmentAriaLabel="Show Password" For="@(() => UserInputModel.Password)" />
+                        <MudTextField @bind-Value="UserInputModel.ConfirmPassword" Label="Password" Variant="Variant.Text" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ButtonTestclick" AdornmentAriaLabel="Show Password" For="@(() => UserInputModel.ConfirmPassword)" />
                             
                         @if(Roles is not null) {
                             <MudSelect Class="mt-4" MultiSelectionTextFunc="@(new Func<List<string>, string>(GetMultiSelectionText))" T="string" Label="Roles" MultiSelection="true" @bind-Value="value" @bind-SelectedValues='options'>
@@ -66,6 +67,8 @@
     private UserInputModel UserInputModel = new UserInputModel();
 
     private string Username { get; set; }
+
+    [Required]
     private string value { get; set; } = "Nothing selected";
     private IEnumerable<string> options { get; set; } = new HashSet<string>();
     private List<IdentityRole>? Roles { get; set; }
@@ -107,7 +110,7 @@
         {
             success = true;
             Snackbar.Add($"New Member is created", Severity.Success);
-            _navigationManager.NavigateTo($"/team");
+            _navigationManager.NavigateTo($"/members");
         }
         else
         {
@@ -116,6 +119,14 @@
             Snackbar.Add($"{error}", Severity.Error);
             
         }
+    }
+
+    private async Task OnInvalidSubmit()
+    {
+        // get errors from the EditForm
+        var errors = form.Errors;
+        success = false;
+        Snackbar.Add("Something went Wrong! Please make sure to fill all the highlighted fields", Severity.Error);
     }
 
     private void Navigate(string url)

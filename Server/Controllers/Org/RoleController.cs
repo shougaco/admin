@@ -40,8 +40,8 @@ namespace Application.Server.Controllers.Org
             }
             
             var company = await _context.Company.FirstOrDefaultAsync(c => c.Id== companyId);
-
-            return await _roleManager.Roles.Where(r => r.Name.StartsWith(company.Slug.ToUpper())).ToListAsync();
+            
+            return await _context.Roles.Where(r => r.Name.ToLower().StartsWith(company.Slug.ToLower() + "-")).ToListAsync();
         }
 
         // GET: api/IdentityRole/5
