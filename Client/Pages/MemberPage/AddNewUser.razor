@@ -69,16 +69,11 @@
     private string value { get; set; } = "Nothing selected";
     private IEnumerable<string> options { get; set; } = new HashSet<string>();
     private List<IdentityRole>? Roles { get; set; }
-    private List<Supplier>? Suppliers { get; set; }
-    private Supplier SelectedSupplier => !String.IsNullOrEmpty(supplierValue) ? Suppliers.FirstOrDefault(s => s.Id == supplierValue) : null;
-
-    private string supplierValue { get; set; }
 
 
     protected override async Task OnInitializedAsync()
     {
         Roles = await _client.GetFromJsonAsync<List<IdentityRole>>($"/api/role?companyId={_stateContainer.Company.Id}");
-        Suppliers = await _client.GetFromJsonAsync<List<Supplier>>($"/api/supplier?companyId={_stateContainer.Company.Id}");
     }
 
     private string GetMultiSelectionText(List<string> selectedValues)
@@ -104,9 +99,6 @@
 
     private async Task OnValidSubmit() 
     {
-        @if(SelectedSupplier is not null) {
-            UserInputModel.SupplierId = SelectedSupplier.Id;
-        }
         var selectedRoles = Roles.Where(x => options.Contains(x.Name)).Select(x => x.Name).ToArray();
         UserInputModel.RoleNames = selectedRoles;
         var response = await _client.PostAsJsonAsync($"/api/user?companyId={_stateContainer.Company.Id}", UserInputModel);

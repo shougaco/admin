@@ -26,6 +26,4 @@ public class UserInputModel
     [Required]
     public string[] RoleNames { get; set; }
 
-    public string? SupplierId { get; set; }
-
 }
