@@ -3,17 +3,8 @@
 
 <MudContainer MaxWidth="MaxWidth.Large">
     <MudGrid>
-        <MudItem xs="12" lg="12">
-            <Navigation />
-            <MudPaper Elevation="25" >
-                <MudToolBar>
-                    <MudIconButton Icon="@Icons.Material.Outlined.ArrowBack" Color="Color.Inherit" Class="mr-1" OnClick='@(() => Navigate("company"))'/>
-                    <MudText Class="py-1 text-nowrap" Typo="Typo.body1">Add a new Company</MudText>
-                    <MudSpacer />
-                    <MudIconButton Icon="@Icons.Material.Outlined.MoreVert" Color="Color.Inherit" />
-                </MudToolBar>
-            </MudPaper>
-        </MudItem>
+
+        <PageToolbar Title="Add a new Company" BackPath="company" />
 
         <MudItem xs="12" lg="12">
             <MudPaper Elevation="25" Class="p-4">

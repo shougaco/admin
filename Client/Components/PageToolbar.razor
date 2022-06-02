@@ -1,0 +1,35 @@
+<MudItem xs="12" lg="12">
+    <Navigation />
+    <MudPaper Elevation="25" >
+        <MudToolBar>
+            <MudIconButton Icon="@Icons.Material.Outlined.ArrowBack" Color="Color.Inherit" Class="mr-1" 
+                            OnClick="@(RedirectToHistory ? GoBackAsync : () => _navigationManager.NavigateTo(BackPath))"/>
+            <MudText Class="py-1 text-nowrap" Typo="Typo.body1">@Title</MudText>
+            <MudSpacer />
+
+            @if(HasAddButton) {
+                <MudIconButton Icon="@Icons.Material.Outlined.Add" OnClick='@(() => _navigationManager.NavigateTo(AddPath))' />
+                    
+            }
+
+            @AdditionalButtons
+
+            <MudIconButton Icon="@Icons.Material.Outlined.MoreVert" Color="Color.Inherit" />
+        </MudToolBar>
+    </MudPaper>
+</MudItem>
+
+
+@code {
+    [Parameter] public string Title { get; set; }
+    [Parameter] public string BackPath { get; set; }
+    [Parameter] public string AddPath { get; set; }
+    [Parameter] public bool HasAddButton { get; set; }
+    [Parameter] public bool RedirectToHistory { get; set; }
+    [Parameter] public RenderFragment AdditionalButtons { get; set; }
+
+    private async void GoBackAsync()
+    {
+        await _jsRuntime.InvokeVoidAsync("history.back");
+    }
+}

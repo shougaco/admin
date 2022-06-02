@@ -7,18 +7,12 @@
 
 <MudContainer MaxWidth="MaxWidth.Large">
     <MudGrid>
-        <MudItem xs="12" lg="12">
-            <Navigation />
-            <MudPaper Elevation="25" >
-                <MudToolBar>
-                    <MudIconButton Icon="@Icons.Material.Outlined.ArrowBack" Color="Color.Inherit" Class="mr-1" OnClick='@(() => Navigate("members"))'/>
-                    <MudText Class="py-1 text-nowrap" Typo="Typo.body1">Add a new member</MudText>
-                    <MudSpacer />
-                    <MudLink Class="text-nowrap" Href="members/add/new"> Create new User</MudLink>
-                    <MudIconButton Icon="@Icons.Material.Outlined.MoreVert" Color="Color.Inherit" />
-                </MudToolBar>
-            </MudPaper>
-        </MudItem>
+
+        <PageToolbar Title="Add a new member" BackPath="members">
+            <AdditionalButtons>
+                <MudLink Class="text-nowrap" Href="members/add/new"> Create new User</MudLink>
+            </AdditionalButtons>
+        </PageToolbar>
 
         <MudItem xs="12" lg="12">
             <MudPaper Elevation="25" Class="p-4">
